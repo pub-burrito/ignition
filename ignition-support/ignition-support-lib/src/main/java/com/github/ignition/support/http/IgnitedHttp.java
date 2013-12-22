@@ -43,13 +43,11 @@ import android.net.NetworkInfo;
 import android.net.Proxy;
 import android.util.Log;
 
-import com.github.ignition.support.IgnitedDiagnostics;
 import com.github.ignition.support.cache.AbstractCache;
 import com.github.ignition.support.http.cache.CachedHttpRequest;
 import com.github.ignition.support.http.cache.HttpResponseCache;
 import com.github.ignition.support.http.gzip.GzipHttpRequestInterceptor;
 import com.github.ignition.support.http.gzip.GzipHttpResponseInterceptor;
-import com.github.ignition.support.http.ssl.EasySSLSocketFactory;
 
 public class IgnitedHttp {
 
@@ -91,14 +89,14 @@ public class IgnitedHttp {
 
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-        if (IgnitedDiagnostics.ANDROID_API_LEVEL >= 7) {
-            schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
-        } else {
-            // used to work around a bug in Android 1.6:
-            // http://code.google.com/p/android/issues/detail?id=1946
-            // TODO: is there a less rigorous workaround for this?
-            schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(), 443));
-        }
+//        if (IgnitedDiagnostics.ANDROID_API_LEVEL >= 7) {
+        schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+//        } else {
+//            // used to work around a bug in Android 1.6:
+//            // http://code.google.com/p/android/issues/detail?id=1946
+//            // TODO: is there a less rigorous workaround for this?
+//            schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(), 443));
+//        }
 
         ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(httpParams, schemeRegistry);
         httpClient = new DefaultHttpClient(cm, httpParams);
