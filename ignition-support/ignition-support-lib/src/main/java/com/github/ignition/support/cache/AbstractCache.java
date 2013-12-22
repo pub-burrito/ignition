@@ -30,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 
 import com.github.ignition.support.IgnitedStrings;
 import com.google.common.collect.MapMaker;
@@ -114,7 +113,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             long ageInMinutes = ((now.getTime() - lastModified) / (1000 * 60));
 
             if (ageInMinutes >= expirationInMinutes) {
-                Log.d(name, "DISK cache expiration for file " + f.toString());
+                System.out.printf( "%s - %s\n", name, "DISK cache expiration for file " + f.toString());
                 f.delete();
             }
         }
@@ -132,7 +131,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      */
     public boolean enableDiskCache(Context context, int storageDevice) {
         Context appContext = context.getApplicationContext();
-
+        
         String rootDir = null;
         if (storageDevice == DISK_CACHE_SDCARD
                 && Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -156,19 +155,19 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             try {
                 nomedia.createNewFile();
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Failed creating .nomedia file");
+            	System.err.printf("%s - %s\n", LOG_TAG, "Failed creating .nomedia file");
             }
         }
 
         isDiskCacheEnabled = outFile.exists();
 
         if (!isDiskCacheEnabled) {
-            Log.w(LOG_TAG, "Failed creating disk cache directory " + diskCacheDirectory);
+        	System.out.printf("%s - %s\n", LOG_TAG, "Failed creating disk cache directory " + diskCacheDirectory);
         } else {
-            Log.d(name, "enabled write through to " + diskCacheDirectory);
+        	System.out.printf("%s - %s\n", name, "enabled write through to " + diskCacheDirectory);
 
             // sanitize disk cache
-            Log.d(name, "sanitize DISK cache");
+            System.out.printf("%s - %s\n", name, "sanitize DISK cache");
             sanitizeDiskCache();
         }
 
@@ -258,7 +257,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
         ValT value = cache.get(key);
         if (value != null) {
             // memory hit
-            Log.d(name, "MEM cache hit for " + key.toString());
+        	System.out.printf("%s - %s\n", name, "MEM cache hit for " + key.toString());
             return value;
         }
 
@@ -271,13 +270,13 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             long ageInMinutes = ((now.getTime() - lastModified) / (1000 * 60));
 
             if (ageInMinutes >= expirationInMinutes) {
-                Log.d(name, "DISK cache expiration for file " + file.toString());
+            	System.out.printf("%s - %s\n", name, "DISK cache expiration for file " + file.toString());
                 file.delete();
                 return null;
             }
 
             // disk hit
-            Log.d(name, "DISK cache hit for " + key.toString());
+            System.out.printf("%s - %s\n", name, "DISK cache hit for " + key.toString());
             try {
                 value = readValueFromDisk(file);
             } catch (IOException e) {
@@ -470,7 +469,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             }
         }
 
-        Log.d(LOG_TAG, "Cache cleared");
+        System.out.printf("%s - %s\n", LOG_TAG, "Cache cleared");
     }
 
     @Override
