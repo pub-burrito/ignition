@@ -30,8 +30,6 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
-import android.util.Log;
-
 import com.github.ignition.support.http.cache.CachedHttpResponse.ResponseData;
 import com.github.ignition.support.http.cache.HttpResponseCache;
 
@@ -60,7 +58,7 @@ public abstract class IgnitedHttpRequestBase implements IgnitedHttpRequest,
     IgnitedHttpRequestBase(IgnitedHttp http) {
         this.ignitedHttp = http;
         this.httpClient = http.getHttpClient();
-    }
+    } 
 
     @Override
     public HttpUriRequest unwrap() {
@@ -152,7 +150,7 @@ public abstract class IgnitedHttpRequestBase implements IgnitedHttpRequest,
 
     private boolean retryRequest(IgnitedHttpRequestRetryHandler retryHandler, IOException cause,
             HttpContext context) {
-        Log.e(IgnitedHttp.LOG_TAG, "Intercepting exception that wasn't handled by HttpClient");
+    	System.err.printf("%s - %s", IgnitedHttp.LOG_TAG, "Intercepting exception that wasn't handled by HttpClient");
         executionCount = Math.max(executionCount, retryHandler.getTimesRetried());
         return retryHandler.retryRequest(cause, ++executionCount, context);
     }

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.HashSet;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -12,9 +13,6 @@ import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
-
-import android.os.SystemClock;
-import android.util.Log;
 
 public class IgnitedHttpRequestRetryHandler implements HttpRequestRetryHandler {
 
@@ -75,19 +73,54 @@ public class IgnitedHttpRequestRetryHandler implements HttpRequestRetryHandler {
         }
 
         if (retry) {
-            Log.e(IgnitedHttp.LOG_TAG, "request failed (" + exception.getClass().getCanonicalName()
+            System.err.printf("%s - %s", IgnitedHttp.LOG_TAG, "request failed (" + exception.getClass().getCanonicalName()
                     + ": " + exception.getMessage() + " / attempt " + executionCount
                     + "), will retry in " + RETRY_SLEEP_TIME_MILLIS / 1000.0 + " seconds");
-            SystemClock.sleep(RETRY_SLEEP_TIME_MILLIS);
+            sleep(RETRY_SLEEP_TIME_MILLIS);
         } else {
-            Log.e(IgnitedHttp.LOG_TAG, "request failed after " + executionCount + " attempts");
+        	System.err.printf("%s - %s", IgnitedHttp.LOG_TAG, "request failed after " + executionCount + " attempts");
             exception.printStackTrace();
         }
 
         return retry;
     }
 
-    public int getTimesRetried() {
+    /**
+     * Waits a given number of milliseconds (of uptimeMillis) before returning.
+     * Similar to {@link java.lang.Thread#sleep(long)}, but does not throw
+     * {@link InterruptedException}; {@link Thread#interrupt()} events are
+     * deferred until the next interruptible operation.  Does not return until
+     * at least the specified number of milliseconds has elapsed.
+     * 
+	 * @param retrySleepTimeMillis Time to sleep
+	 * @since TODO
+	 */
+	private void sleep( long retrySleepTimeMillis )
+	{
+		long currentTime = new Date().getTime();
+		long timeSlept = retrySleepTimeMillis;
+		boolean interrupted = false;
+		do {
+			try
+			{
+				Thread.sleep( timeSlept );
+			}
+			catch ( InterruptedException e )
+			{	
+				interrupted = true;
+			}
+			
+			timeSlept = currentTime + retrySleepTimeMillis - new Date().getTime();
+			
+		} while ( timeSlept < 0 );
+		
+		if ( interrupted )
+		{
+			Thread.currentThread().interrupt();
+		}
+	}
+
+	public int getTimesRetried() {
         return timesRetried;
     }
 }

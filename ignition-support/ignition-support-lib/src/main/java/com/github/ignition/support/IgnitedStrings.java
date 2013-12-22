@@ -17,8 +17,6 @@ package com.github.ignition.support;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import android.text.TextUtils;
-
 // contains code from the Apache Software foundation
 public class IgnitedStrings {
 
@@ -31,8 +29,7 @@ public class IgnitedStrings {
      * @return the underscored string
      */
     public static String underscore(String camelCaseString) {
-        String[] words = splitByCharacterTypeCamelCase(camelCaseString);
-        return TextUtils.join("_", words).toLowerCase();
+        return underscore( camelCaseString, null );
     }
 
     /**
@@ -49,7 +46,23 @@ public class IgnitedStrings {
      */
     public static String underscore(String camelCaseString, Locale locale) {
         String[] words = splitByCharacterTypeCamelCase(camelCaseString);
-        return TextUtils.join("_", words).toLowerCase(locale);
+        
+        if ( words.length == 0 )
+    	{
+        	return "";
+    	}
+        
+        //start building string with first element
+        StringBuilder joinedString = new StringBuilder(words[0]);
+        
+        for ( int i = 1; i < words.length; i++ )
+        {
+        	joinedString.append( String.format("_%s", words[i] ) );
+        }
+        
+        return locale != null ?
+        		joinedString.toString().toLowerCase(locale) :
+        		joinedString.toString().toLowerCase() ;
     }
 
     /**
