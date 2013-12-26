@@ -52,6 +52,7 @@ public class ImageCache extends AbstractCache<String, byte[]> {
         BufferedInputStream istream = new BufferedInputStream(new FileInputStream(file));
         long fileSize = file.length();
         if (fileSize > Integer.MAX_VALUE) {
+        	istream.close();
             throw new IOException("Cannot read files larger than " + Integer.MAX_VALUE + " bytes");
         }
 
