@@ -1,10 +1,6 @@
 package com.github.ignition.support.cache;
 
-import java.io.IOException;
 import java.util.ArrayList;
-
-import android.os.Parcel;
-import android.os.Parcelable;
 
 /**
  * Superclass of all list objects to be stored in {@link ModelCache}.
@@ -41,18 +37,6 @@ public class CachedList<CO extends CachedModel> extends CachedModel {
      */
     public CachedList() {
         list = new ArrayList<CO>();
-    }
-
-    /**
-     * Constructor setting variables from parcel. Same as using a blank constructor and calling
-     * readFromParcel.
-     * 
-     * @param source
-     *            Parcel to be read from.
-     * @throws IOException
-     */
-    public CachedList(Parcel source) throws IOException {
-        super(source);
     }
 
     /**
@@ -193,64 +177,6 @@ public class CachedList<CO extends CachedModel> extends CachedModel {
         clazz = cachedList.clazz;
         list = cachedList.list;
         return false;
-    }
-
-    /**
-     * Creator object used for parcelling
-     */
-    public static final Creator<CachedList<CachedModel>> CREATOR = new Parcelable.Creator<CachedList<CachedModel>>() {
-
-        /**
-         * @see android.os.Parcelable.Creator#createFromParcel(android.os.Parcel)
-         */
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        @Override
-        public CachedList<CachedModel> createFromParcel(Parcel source) {
-            try {
-                return new CachedList(source);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        /**
-         * @see android.os.Parcelable.Creator#newArray(int)
-         */
-        @SuppressWarnings("unchecked")
-        @Override
-        public CachedList<CachedModel>[] newArray(int size) {
-            return new CachedList[size];
-        }
-
-    };
-
-    /**
-     * @see com.github.droidfu.cachefu.CachedModel#readFromParcel(android.os.Parcel)
-     */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public void readFromParcel(Parcel source) throws IOException {
-        super.readFromParcel(source);
-        // Read class from parcel, then load class and use creator to generate new object from data
-        String className = source.readString();
-        try {
-            clazz = (Class<? extends CachedModel>) Class.forName(className);
-            list = source.createTypedArrayList((Creator) clazz.getField("CREATOR").get(this));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * @see com.github.droidfu.cachefu.CachedModel#writeToParcel(android.os.Parcel, int)
-     */
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        super.writeToParcel(dest, flags);
-        // Write class name to parcel before object, so can be loaded correctly back in
-        dest.writeString(clazz.getCanonicalName());
-        dest.writeTypedList(list);
     }
 
 }

@@ -166,10 +166,10 @@ public class IgnitedHttp {
      *            )
      * @see HttpResponseCache
      */
-    public void enableResponseCache(Context context, int initialCapacity, long expirationInMinutes,
+    public void enableResponseCache(String rootDir, int initialCapacity, long expirationInMinutes,
             int maxConcurrentThreads, int diskCacheStorageDevice) {
         enableResponseCache(initialCapacity, expirationInMinutes, maxConcurrentThreads);
-        responseCache.enableDiskCache(context, diskCacheStorageDevice);
+        responseCache.enableDiskCache(diskCacheStorageDevice, rootDir);
     }
 
     /**

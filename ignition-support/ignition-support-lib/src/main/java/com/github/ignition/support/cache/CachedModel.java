@@ -1,9 +1,5 @@
 package com.github.ignition.support.cache;
 
-import java.io.IOException;
-
-import android.os.Parcel;
-import android.os.Parcelable;
 
 /**
  * Superclass of all objects to be stored in {@link ModelCache}.
@@ -15,7 +11,7 @@ import android.os.Parcelable;
  * @author michaelengland
  * 
  */
-public abstract class CachedModel implements Parcelable {
+public abstract class CachedModel {
 
     private String id;
     private long transactionId = Long.MIN_VALUE;
@@ -25,18 +21,6 @@ public abstract class CachedModel implements Parcelable {
      * subclasses in order for parceling to work.
      */
     public CachedModel() {
-    }
-
-    /**
-     * Constructor setting variables from parcel. Same as using a blank constructor and calling
-     * readFromParcel.
-     * 
-     * @param source
-     *            Parcel to be read from.
-     * @throws IOException
-     */
-    public CachedModel(Parcel source) throws IOException {
-        readFromParcel(source);
     }
 
     /**
@@ -229,34 +213,5 @@ public abstract class CachedModel implements Parcelable {
      *         purposes, especially on lists).
      */
     public abstract boolean reloadFromCachedModel(ModelCache modelCache, CachedModel cachedModel);
-
-    /**
-     * @see android.os.Parcelable#describeContents()
-     */
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    /**
-     * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
-     */
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeLong(transactionId);
-    }
-
-    /**
-     * Saves data to parcel.
-     * 
-     * @param source
-     *            Parcel to save to.
-     * @throws IOException
-     */
-    public void readFromParcel(Parcel source) throws IOException {
-        id = source.readString();
-        transactionId = source.readLong();
-    }
 
 }

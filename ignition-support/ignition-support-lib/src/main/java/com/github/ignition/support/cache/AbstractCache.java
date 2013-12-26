@@ -28,9 +28,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import android.content.Context;
-import android.os.Environment;
-
 import com.github.ignition.support.IgnitedStrings;
 import com.google.common.collect.MapMaker;
 
@@ -129,23 +126,23 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      *            {@link #DISK_CACHE_SDCARD})
      * @return
      */
-    public boolean enableDiskCache(Context context, int storageDevice) {
-        Context appContext = context.getApplicationContext();
-        
-        String rootDir = null;
-        if (storageDevice == DISK_CACHE_SDCARD
-                && Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            // SD-card available
-            rootDir = Environment.getExternalStorageDirectory().getAbsolutePath()
-                    + "/Android/data/" + appContext.getPackageName() + "/cache";
-        } else {
-            File internalCacheDir = appContext.getCacheDir();
-            // apparently on some configurations this can come back as null
-            if (internalCacheDir == null) {
-                return (isDiskCacheEnabled = false);
-            }
-            rootDir = internalCacheDir.getAbsolutePath();
-        }
+    public boolean enableDiskCache( int storageDevice, String rootDir ) {
+//        Context appContext = context.getApplicationContext();
+//        
+//        String rootDir = null;
+//        if (storageDevice == DISK_CACHE_SDCARD
+//                && Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+//            // SD-card available
+//            rootDir = Environment.getExternalStorageDirectory().getAbsolutePath()
+//                    + "/Android/data/" + appContext.getPackageName() + "/cache";
+//        } else {
+//            File internalCacheDir = appContext.getCacheDir();
+//            // apparently on some configurations this can come back as null
+//            if (internalCacheDir == null) {
+//                return (isDiskCacheEnabled = false);
+//            }
+//            rootDir = internalCacheDir.getAbsolutePath();
+//        }
 
         setRootDir(rootDir);
 
