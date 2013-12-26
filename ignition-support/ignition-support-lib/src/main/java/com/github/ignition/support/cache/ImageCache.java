@@ -22,9 +22,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
 /**
  * Implements a cache capable of caching image files. It exposes helper methods to immediately
  * access binary image data as {@link Bitmap} objects.
@@ -65,13 +62,13 @@ public class ImageCache extends AbstractCache<String, byte[]> {
         return imageData;
     }
 
-    public synchronized Bitmap getBitmap(Object elementKey) {
-        byte[] imageData = super.get(elementKey);
-        if (imageData == null) {
-            return null;
-        }
-        return BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
-    }
+//    public synchronized Bitmap getBitmap(Object elementKey) {
+//        byte[] imageData = super.get(elementKey);
+//        if (imageData == null) {
+//            return null;
+//        }
+//        return BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
+//    }
 
     @Override
     protected void writeValueToDisk(File file, byte[] imageData) throws IOException {

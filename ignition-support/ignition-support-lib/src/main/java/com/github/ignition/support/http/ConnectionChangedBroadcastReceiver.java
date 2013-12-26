@@ -15,11 +15,8 @@
 
 package com.github.ignition.support.http;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 
-public class ConnectionChangedBroadcastReceiver extends BroadcastReceiver {
+public class ConnectionChangedBroadcastReceiver /*extends BroadcastReceiver*/ {
 
     private IgnitedHttp http;
 
@@ -27,9 +24,9 @@ public class ConnectionChangedBroadcastReceiver extends BroadcastReceiver {
         this.http = http;
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        http.updateProxySettings(context);
-    }
+//    @Override
+//    public void onReceive(Context context, Intent intent) {
+//        http.updateProxySettings(context);
+//    }
 
 }

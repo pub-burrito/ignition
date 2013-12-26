@@ -17,11 +17,9 @@ package com.github.ignition.support.http;
 import java.util.HashMap;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpVersion;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -32,22 +30,20 @@ import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
-
-import android.Manifest;
-import android.content.Context;
-import android.content.IntentFilter;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Proxy;
-import android.util.Log;
 
 import com.github.ignition.support.cache.AbstractCache;
 import com.github.ignition.support.http.cache.CachedHttpRequest;
 import com.github.ignition.support.http.cache.HttpResponseCache;
 import com.github.ignition.support.http.gzip.GzipHttpRequestInterceptor;
 import com.github.ignition.support.http.gzip.GzipHttpResponseInterceptor;
+//import android.Manifest;
+//import android.content.Context;
+//import android.content.IntentFilter;
+//import android.net.ConnectivityManager;
+//import android.net.NetworkInfo;
+//import android.net.Proxy;
+//import android.util.Log;
 
 public class IgnitedHttp {
 
@@ -70,10 +66,10 @@ public class IgnitedHttp {
         setupHttpClient();
     }
 
-    public IgnitedHttp(Context context) {
-        setupHttpClient();
-        listenForConnectivityChanges(context);
-    }
+//    public IgnitedHttp(Context context) {
+//        setupHttpClient();
+//        listenForConnectivityChanges(context);
+//    }
 
     protected void setupHttpClient() {
         BasicHttpParams httpParams = new BasicHttpParams();
@@ -102,19 +98,19 @@ public class IgnitedHttp {
         httpClient = new DefaultHttpClient(cm, httpParams);
     }
 
-    /**
-     * Registers a broadcast receiver with the application context that will take care of updating
-     * proxy settings when failing over between 3G and Wi-Fi. <b>This requires the
-     * {@link Manifest.permission#ACCESS_NETWORK_STATE} permission</b>.
-     * 
-     * @param context
-     *            the context used to retrieve the app context
-     */
-    public void listenForConnectivityChanges(Context context) {
-        context.getApplicationContext().registerReceiver(
-                new ConnectionChangedBroadcastReceiver(this),
-                new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-    }
+//    /**
+//     * Registers a broadcast receiver with the application context that will take care of updating
+//     * proxy settings when failing over between 3G and Wi-Fi. <b>This requires the
+//     * {@link Manifest.permission#ACCESS_NETWORK_STATE} permission</b>.
+//     * 
+//     * @param context
+//     *            the context used to retrieve the app context
+//     */
+//    public void listenForConnectivityChanges(Context context) {
+//        context.getApplicationContext().registerReceiver(
+//                new ConnectionChangedBroadcastReceiver(this),
+//                new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+//    }
 
     public void setGzipEncodingEnabled(boolean enabled) {
         if (enabled) {
@@ -128,7 +124,7 @@ public class IgnitedHttp {
 
     /**
      * Enables caching of HTTP responses. This will only enable the in-memory cache. If you also
-     * want to enable the disk cache, see {@link #enableResponseCache(Context, int, long, int, int)}
+     * want to enable the disk cache, see {@link #enableResponseCache(int, long, int, int)}
      * .
      * 
      * @param initialCapacity
@@ -148,9 +144,7 @@ public class IgnitedHttp {
 
     /**
      * Enables caching of HTTP responses. This will also enable the disk cache.
-     * 
-     * @param context
-     *            the current context
+	 *
      * @param initialCapacity
      *            the initial element size of the cache
      * @param expirationInMinutes
@@ -198,46 +192,46 @@ public class IgnitedHttp {
         return httpClient;
     }
 
-    /**
-     * Updates the underlying HTTP client's proxy settings with what the user has entered in the APN
-     * settings. This will be called automatically if {@link #listenForConnectivityChanges(Context)}
-     * has been called. <b>This requires the {@link Manifest.permission#ACCESS_NETWORK_STATE}
-     * permission</b>.
-     * 
-     * @param context
-     *            the current context
-     */
-    public void updateProxySettings(Context context) {
-        if (context == null) {
-            return;
-        }
-        HttpParams httpParams = httpClient.getParams();
-        ConnectivityManager connectivity = (ConnectivityManager) context
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo nwInfo = connectivity.getActiveNetworkInfo();
-        if (nwInfo == null) {
-            return;
-        }
-        Log.i(LOG_TAG, nwInfo.toString());
-        if (nwInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
-            String proxyHost = Proxy.getHost(context);
-            if (proxyHost == null) {
-                proxyHost = Proxy.getDefaultHost();
-            }
-            int proxyPort = Proxy.getPort(context);
-            if (proxyPort == -1) {
-                proxyPort = Proxy.getDefaultPort();
-            }
-            if (proxyHost != null && proxyPort > -1) {
-                HttpHost proxy = new HttpHost(proxyHost, proxyPort);
-                httpParams.setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
-            } else {
-                httpParams.setParameter(ConnRoutePNames.DEFAULT_PROXY, null);
-            }
-        } else {
-            httpParams.setParameter(ConnRoutePNames.DEFAULT_PROXY, null);
-        }
-    }
+//    /**
+//     * Updates the underlying HTTP client's proxy settings with what the user has entered in the APN
+//     * settings. This will be called automatically if {@link #listenForConnectivityChanges(Context)}
+//     * has been called. <b>This requires the {@link Manifest.permission#ACCESS_NETWORK_STATE}
+//     * permission</b>.
+//     * 
+//     * @param context
+//     *            the current context
+//     */
+//    public void updateProxySettings(Context context) {
+//        if (context == null) {
+//            return;
+//        }
+//        HttpParams httpParams = httpClient.getParams();
+//        ConnectivityManager connectivity = (ConnectivityManager) context
+//                .getSystemService(Context.CONNECTIVITY_SERVICE);
+//        NetworkInfo nwInfo = connectivity.getActiveNetworkInfo();
+//        if (nwInfo == null) {
+//            return;
+//        }
+//        Log.i(LOG_TAG, nwInfo.toString());
+//        if (nwInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+//            String proxyHost = Proxy.getHost(context);
+//            if (proxyHost == null) {
+//                proxyHost = Proxy.getDefaultHost();
+//            }
+//            int proxyPort = Proxy.getPort(context);
+//            if (proxyPort == -1) {
+//                proxyPort = Proxy.getDefaultPort();
+//            }
+//            if (proxyHost != null && proxyPort > -1) {
+//                HttpHost proxy = new HttpHost(proxyHost, proxyPort);
+//                httpParams.setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+//            } else {
+//                httpParams.setParameter(ConnRoutePNames.DEFAULT_PROXY, null);
+//            }
+//        } else {
+//            httpParams.setParameter(ConnRoutePNames.DEFAULT_PROXY, null);
+//        }
+//    }
 
     public IgnitedHttpRequest get(String url) {
         return get(url, false);
