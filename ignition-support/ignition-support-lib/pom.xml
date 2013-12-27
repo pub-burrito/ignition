@@ -4,15 +4,24 @@
   
   <groupId>com.github.ignition</groupId>
   <artifactId>ignition-support</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3.1-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava-collections</artifactId>
-      <version>r03</version>
+	  <groupId>com.google.guava</groupId>
+	  <artifactId>guava</artifactId>
+	  <version>12.0</version>
+	  <scope>compile</scope>
+	  <exclusions>
+	  	<!-- Already included as part of Guice 4.0 - sorta -->
+	  	<!-- 
+	  	<exclusion>
+	  		<groupId>com.google.code.findbugs</groupId>
+	  		<artifactId>jsr305</artifactId>
+	  	</exclusion>
+	  	 -->
+	  </exclusions>
     </dependency>
-    
               
     <dependency>
   	  <groupId>org.apache.httpcomponents</groupId>
