@@ -126,7 +126,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      *            {@link #DISK_CACHE_SDCARD})
      * @return
      */
-    public boolean enableDiskCache( int storageDevice, String rootDir ) {
+    public boolean enableDiskCache( String rootDir ) {
 //        Context appContext = context.getApplicationContext();
 //        
 //        String rootDir = null;

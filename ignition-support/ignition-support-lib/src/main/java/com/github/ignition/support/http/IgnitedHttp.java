@@ -161,9 +161,9 @@ public class IgnitedHttp {
      * @see HttpResponseCache
      */
     public void enableResponseCache(String rootDir, int initialCapacity, long expirationInMinutes,
-            int maxConcurrentThreads, int diskCacheStorageDevice) {
+            int maxConcurrentThreads ) {
         enableResponseCache(initialCapacity, expirationInMinutes, maxConcurrentThreads);
-        responseCache.enableDiskCache(diskCacheStorageDevice, rootDir);
+        responseCache.enableDiskCache( rootDir);
     }
 
     /**
@@ -292,8 +292,9 @@ public class IgnitedHttp {
         HttpConnectionParams.setSoTimeout(httpClient.getParams(), socketTimeout);
     }
 
-    public void setDefaultHeader(String header, String value) {
+    public IgnitedHttp setDefaultHeader(String header, String value) {
         defaultHeaders.put(header, value);
+        return this;
     }
 
     public HashMap<String, String> getDefaultHeaders() {
