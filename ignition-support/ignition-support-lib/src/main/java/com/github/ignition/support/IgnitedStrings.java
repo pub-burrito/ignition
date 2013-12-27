@@ -14,8 +14,16 @@
  */
 package com.github.ignition.support;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+
+import com.github.ignition.support.http.IgnitedHttp;
 
 // contains code from the Apache Software foundation
 public class IgnitedStrings {
@@ -150,5 +158,42 @@ public class IgnitedStrings {
         list.add(new String(c, tokenStart, c.length - tokenStart));
         return (String[]) list.toArray(new String[list.size()]);
     }
+    
+    public static String urlEncode( List<NameValuePair> parameters )
+	{
+		//@formatter:off
+		String encodedParams = 
+				URLEncodedUtils.format( parameters, IgnitedHttp.CHARSET );
+		
+		encodedParams = workaroundJavaSpaceEncoding( encodedParams );
+		
+		//@formatter:on
+		
+		return encodedParams;
+	}
+    
+    public static String urlEncode( String value )
+	{
+		String encodedValue = null;
+		
+		try
+		{
+			encodedValue = URLEncoder.encode( value, IgnitedHttp.CHARSET );
+			
+			encodedValue = workaroundJavaSpaceEncoding( encodedValue );
+		}
+		catch ( UnsupportedEncodingException e )
+		{
+			System.err.println(String.format( "%s\nError encoding value: %s",e, value ) );
+		}
+		
+		return encodedValue;
+	}
+    
+    // Java URI doesn't decode + signs as space as the URI spec determines :\ let's use the unicode escaped version of space instead
+ 	private static String workaroundJavaSpaceEncoding( String encodedParams )
+ 	{
+ 		return encodedParams.replaceAll( "\\+", "%20" );
+ 	}
 
 }
