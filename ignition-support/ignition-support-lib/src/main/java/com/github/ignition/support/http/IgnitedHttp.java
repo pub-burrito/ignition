@@ -14,10 +14,26 @@
  */
 package com.github.ignition.support.http;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpVersion;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -27,11 +43,14 @@ import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.protocol.HTTP;
 
+import com.github.ignition.support.IgnitedStrings;
 import com.github.ignition.support.cache.AbstractCache;
 import com.github.ignition.support.http.cache.CachedHttpRequest;
 import com.github.ignition.support.http.cache.HttpResponseCache;
@@ -50,13 +69,15 @@ public class IgnitedHttp {
     static final String LOG_TAG = IgnitedHttp.class.getSimpleName();
 
     public static final int DEFAULT_MAX_CONNECTIONS = 4;
-    public static final int DEFAULT_SOCKET_TIMEOUT = 30 * 1000;
+    public static final int DEFAULT_SOCKET_TIMEOUT = 15 * 60 * 1000;
     public static final int DEFAULT_WAIT_FOR_CONNECTION_TIMEOUT = 30 * 1000;
     public static final String DEFAULT_HTTP_USER_AGENT = "Android/Ignition";
 
     public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
     public static final String ENCODING_GZIP = "gzip";
 
+    public static final String CHARSET = HTTP.UTF_8;
+    
     private HashMap<String, String> defaultHeaders = new HashMap<String, String>();
     private AbstractHttpClient httpClient;
 
@@ -65,11 +86,6 @@ public class IgnitedHttp {
     public IgnitedHttp() {
         setupHttpClient();
     }
-
-//    public IgnitedHttp(Context context) {
-//        setupHttpClient();
-//        listenForConnectivityChanges(context);
-//    }
 
     protected void setupHttpClient() {
         BasicHttpParams httpParams = new BasicHttpParams();
@@ -85,14 +101,7 @@ public class IgnitedHttp {
 
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-//        if (IgnitedDiagnostics.ANDROID_API_LEVEL >= 7) {
         schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
-//        } else {
-//            // used to work around a bug in Android 1.6:
-//            // http://code.google.com/p/android/issues/detail?id=1946
-//            // TODO: is there a less rigorous workaround for this?
-//            schemeRegistry.register(new Scheme("https", new EasySSLSocketFactory(), 443));
-//        }
 
         ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(httpParams, schemeRegistry);
         httpClient = new DefaultHttpClient(cm, httpParams);
@@ -263,6 +272,165 @@ public class IgnitedHttp {
     public IgnitedHttpRequest delete(String url) {
         return new HttpDelete(this, url, defaultHeaders);
     }
+    
+    /**
+	 * Builds an HTTP request given the passed parameters.
+	 * 
+	 * @param method
+	 * @param url
+	 * @param params
+	 * @param headers
+	 * @param entity
+	 * @param credentials
+	 * 
+	 * @return an {@link IgnitedHttpRequest} based on the method passed, initialized with all parameters, ready to execute.
+	 * 
+	 * @throws URISyntaxException
+	 * @throws UnsupportedEncodingException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
+	protected Map.Entry<IgnitedHttpRequest, URI> buildRequest( final HttpMethod method, final String url, Map<String, Object> params, Map<String, Object> headers, HttpEntity entity )
+		throws URISyntaxException,
+			UnsupportedEncodingException,
+			InvalidKeyException,
+			NoSuchAlgorithmException,
+			IOException
+	{
+		
+		if ( !method.bodyAllowed && entity != null )
+		{
+			throw new ClientProtocolException( "Sending an Entity/Body with an HTTP method that does not expect it is currently not supported." ); 
+		}
+		
+		IgnitedHttpRequest request = null;
+		
+		URI uri = new URI( url );
+		
+		List<NameValuePair> parameters = params == null ? new ArrayList<NameValuePair>() : convertParameters( params );
+		
+		// append parameters to URI only if not using POST (in which case it will encode it into the body - unless receiving different body, ie: JSON)
+		if ( !parameters.isEmpty() )
+		{
+			if ( !method.bodyAllowed || entity != null )
+			{
+				String encodedParams = IgnitedStrings.urlEncode( parameters );
+				
+				uri = URIUtils.createURI( uri.getScheme(), uri.getHost(), uri.getPort(), uri.getRawPath(), encodedParams, null );
+			}
+		}
+		
+		if ( method.bodyAllowed && entity == null )
+		{
+			entity = new UrlEncodedFormEntity( parameters, CHARSET );
+		}
+		
+		switch ( method )
+		{
+			case GET:
+				request = get( uri.toString() );
+				
+				break;
+			
+			case POST:
+				request = post( uri.toString(), entity );
+				
+				break;
+			
+			case PUT:
+				request = put( uri.toString(), entity );
+				
+				break;
+			
+			case DELETE:
+				request = delete( uri.toString() );
+				
+				break;
+			
+			default:
+				throw new UnsupportedOperationException( String.format( "HTTP Method not supported yet: %s", method ) );
+		}
+		
+		// Headers
+		HttpUriRequest rawRequest = request.unwrap();
+				
+		if ( entity != null )
+		{
+			Header contentTypeHeader = entity.getContentType();
+			
+			if ( !rawRequest.containsHeader( contentTypeHeader.getName() ) )
+			{
+				rawRequest.addHeader( contentTypeHeader );
+			}
+		}
+		
+		if ( headers != null )
+		{
+			for ( Map.Entry<String, Object> header : headers.entrySet() )
+			{
+				rawRequest.addHeader( header.getKey(), header.getValue().toString() );
+			}
+			
+			//adding back headers that were generated to original map
+			for ( Header header : rawRequest.getAllHeaders() )
+			{
+				if ( !headers.containsKey( header.getName() ) ) 
+				{
+					headers.put( header.getName(), header.getValue() );
+				}
+			}
+		}
+		
+		return new SimpleEntry<IgnitedHttpRequest, URI>( request, uri );
+	}
+	
+	public static List<NameValuePair> convertParameters( Map<String, Object> params ) throws UnsupportedEncodingException
+	{
+		List<NameValuePair> nvp = new ArrayList<NameValuePair>();
+		
+		for ( Map.Entry<String, Object> param : params.entrySet() )
+		{
+			String paramName = param.getKey().replace( "?", "" );
+			Object paramValue = param.getValue();
+			
+			if ( paramValue != null &&  paramName != null && !paramName.isEmpty() )
+			{
+				if ( paramValue instanceof List )
+				{
+					for ( Object value : (List<?>) paramValue )
+					{
+						if ( value == null )
+							continue;
+						
+						String listParamName = String.format( "%s[]", paramName );
+						String listParamValue = value.toString();
+						
+						nvp.add( new BasicNameValuePair( listParamName, listParamValue ) );
+					}
+				}
+				else if ( paramValue instanceof Map )
+				{
+					for ( Map.Entry<?, ?> value : ( (Map<?, ?>) paramValue ).entrySet() )
+					{
+						if ( value.getValue() == null )
+							continue;
+						
+						String mapParamName = String.format( "%s[%s]", paramName, value.getKey() );
+						String mapParamValue = value.getValue().toString();
+						
+						nvp.add( new BasicNameValuePair( mapParamName, mapParamValue ) );
+					}
+				}
+				else
+				{
+					nvp.add( new BasicNameValuePair( paramName, paramValue.toString() ) );
+				}
+			}
+		}
+		
+		return nvp;
+	}
 
     public void setMaximumConnections(int maxConnections) {
         ConnManagerParams.setMaxTotalConnections(httpClient.getParams(), maxConnections);
@@ -305,5 +473,28 @@ public class IgnitedHttp {
         Scheme _scheme = new Scheme(scheme, PlainSocketFactory.getSocketFactory(), port);
         httpClient.getConnectionManager().getSchemeRegistry().register(_scheme);
     }
+    
+    /**
+	 * Supported HTTP methods for calls, according to RFC 2616 and underlying HTTP client implementation, ie: Apache HTTP client.
+	 * 
+	 * http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
+	 */
+	public static enum HttpMethod
+	{
+		//@formatter:off
+		GET 	( false ),
+		POST	( true ),
+		PUT		( true ),
+		DELETE	( false );
+		//@formatter:on
+		
+		// The RFC doesn't prohibit a body to be sent although most server/client software do not support it for anything but POST/PUT, Apache HTTP client for instance enforces that convention.
+		public boolean bodyAllowed;
+		
+		private HttpMethod( boolean bodyAllowed )
+		{
+			this.bodyAllowed = bodyAllowed;
+		}
+	}
 
 }

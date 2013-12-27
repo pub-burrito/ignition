@@ -157,18 +157,19 @@ public abstract class IgnitedHttpRequestBase implements IgnitedHttpRequest,
 
     @Override
     public IgnitedHttpResponse handleResponse(HttpResponse response) throws IOException {
-        int status = response.getStatusLine().getStatusCode();
-        if (expectedStatusCodes != null && !expectedStatusCodes.isEmpty()
-                && !expectedStatusCodes.contains(status)) {
-            throw new HttpResponseException(status, "Unexpected status code: " + status);
-        }
-
-        IgnitedHttpResponse bhttpr = new IgnitedHttpResponseImpl(response);
-        HttpResponseCache responseCache = ignitedHttp.getResponseCache();
-        if (responseCache != null && bhttpr.getResponseBody() != null) {
-            ResponseData responseData = new ResponseData(status, bhttpr.getResponseBodyAsBytes());
-            responseCache.put(getRequestUrl(), responseData);
-        }
-        return bhttpr;
+    	int status = response.getStatusLine().getStatusCode();
+		if ( expectedStatusCodes != null && !expectedStatusCodes.isEmpty() && !expectedStatusCodes.contains( status ) )
+		{
+			throw new HttpResponseException( status, "Unexpected status code: " + status );
+		}
+		
+		IgnitedHttpResponse bhttpr = new IgnitedHttpResponseImpl( response );
+		HttpResponseCache responseCache = ignitedHttp.getResponseCache();
+		if ( responseCache != null )
+		{
+			ResponseData responseData = new ResponseData( status, bhttpr.getResponseBodyAsBytes() );
+			responseCache.put( getRequestUrl(), responseData );
+		}
+		return bhttpr;
     }
 }
