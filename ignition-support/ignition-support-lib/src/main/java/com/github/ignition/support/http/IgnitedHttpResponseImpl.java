@@ -20,57 +20,116 @@ import java.io.InputStream;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.util.EntityUtils;
 
 public class IgnitedHttpResponseImpl implements IgnitedHttpResponse {
 
-    private HttpResponse response;
+	private HttpResponse response;
     private HttpEntity entity;
 
     public IgnitedHttpResponseImpl(HttpResponse response) throws IOException {
         this.response = response;
-        HttpEntity temp = response.getEntity();
-        if (temp != null) {
-            entity = new BufferedHttpEntity(temp);
+        entity = response.getEntity();
+
+        /*
+         * Replacing original entity by a Cloud Managed one to prevent resource consumption by other frameworks.
+         * We will tell the original entity in this.entity to release its resources when we're done reading from it 
+         * via its consumeContent(). 
+         */
+        if (entity != null) {
+        	response.setEntity( new IgnittedManagedHttpEntity(entity) );
         }
     }
 
-    @Override
+	public HttpEntity getEntity()
+	{
+		return entity;
+	}
+	
     public HttpResponse unwrap() {
         return response;
     }
-
-    @Override
+    
     public InputStream getResponseBody() throws IOException {
-        if (entity == null) {
-            return null;
-        }
-        return entity.getContent();
+        return new InputStream() {
+			private InputStream wrapped = entity.getContent();
+
+			public int available() throws IOException
+			{
+				return wrapped.available();
+			}
+
+			public void close() throws IOException
+			{
+				wrapped.close();
+				
+				entity.consumeContent();
+			}
+
+			public boolean equals( Object obj )
+			{
+				return wrapped.equals( obj );
+			}
+
+			public int hashCode()
+			{
+				return wrapped.hashCode();
+			}
+
+			public void mark( int readlimit )
+			{
+				wrapped.mark( readlimit );
+			}
+
+			public boolean markSupported()
+			{
+				return wrapped.markSupported();
+			}
+
+			public int read() throws IOException
+			{
+				return wrapped.read();
+			}
+
+			public int read( byte[] b, int off, int len ) throws IOException
+			{
+				return wrapped.read( b, off, len );
+			}
+
+			public int read( byte[] b ) throws IOException
+			{
+				return wrapped.read( b );
+			}
+
+			public void reset() throws IOException
+			{
+				wrapped.reset();
+			}
+
+			public long skip( long n ) throws IOException
+			{
+				return wrapped.skip( n );
+			}
+
+			public String toString()
+			{
+				return String.format("%s, wrapped[%s]", IgnitedHttpResponseImpl.this.toString(), wrapped.toString());
+			}
+		};
     }
 
-    @Override
     public byte[] getResponseBodyAsBytes() throws IOException {
-        if (entity == null) {
-            return null;
-        }
         return EntityUtils.toByteArray(entity);
     }
 
-    @Override
     public String getResponseBodyAsString() throws IOException {
-        if (entity == null) {
-            return null;
-        }
         return EntityUtils.toString(entity);
     }
 
-    @Override
     public int getStatusCode() {
         return this.response.getStatusLine().getStatusCode();
     }
 
-    @Override
     public String getHeader(String header) {
         if (!response.containsHeader(header)) {
             return null;
