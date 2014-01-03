@@ -4,7 +4,23 @@
   
   <groupId>com.github.ignition</groupId>
   <artifactId>ignition-support</artifactId>
-  <version>0.3.1-SNAPSHOT</version>
+  <version>0.3-SNAPSHOT</version>
+
+	<distributionManagement>
+		<repository>
+			<id>cloud.archiva.internal</id>
+			<url>http://archiva.cliff.cloudburrito.com:8080/archiva/repository/internal/</url>
+		</repository>
+		<snapshotRepository>
+			<id>cloud.archiva.snapshots</id>
+			<url>http://archiva.cliff.cloudburrito.com:8080/archiva/repository/snapshots/</url>
+		</snapshotRepository>
+		
+		<site>
+			<id>cloud.archiva.internal</id>
+			<url>dav:http://archiva.cliff.cloudburrito.com:8080/archiva/repository/snapshots/com/cloud/sdk</url>
+		</site>
+	</distributionManagement>
 
   <dependencies>
     <dependency>
@@ -31,4 +47,21 @@
   </dependencies>
   
   
+  <build>
+
+  	<plugins>
+
+  		<!-- building condensed jar for use in Framework -->
+	    <plugin>
+	       <groupId>org.apache.maven.plugins</groupId>
+	       <artifactId>maven-jar-plugin</artifactId>
+	       <version>2.4</version>
+	       
+	       <configuration>
+	           <classifier>java</classifier>
+	       </configuration>
+	    </plugin>
+      </plugins>
+  </build>
+
 </project>
