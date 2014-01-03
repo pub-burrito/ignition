@@ -17,6 +17,7 @@ package com.github.ignition.support.http;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -68,6 +69,12 @@ public abstract class IgnitedHttpRequestBase implements IgnitedHttpRequest,
     @Override
     public String getRequestUrl() {
         return request.getURI().toString();
+    }
+    
+    @Override
+    public URI getRequestUri()
+    {
+    	return request.getURI();
     }
 
     @Override

@@ -20,7 +20,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -291,7 +290,7 @@ public class IgnitedHttp {
 	 * @throws NoSuchAlgorithmException
 	 * @throws IOException
 	 */
-	protected Map.Entry<IgnitedHttpRequest, URI> buildRequest( final HttpMethod method, final String url, Map<String, Object> params, Map<String, Object> headers, HttpEntity entity )
+	protected IgnitedHttpRequest buildRequest( final HttpMethod method, final String url, Map<String, Object> params, Map<String, Object> headers, HttpEntity entity )
 		throws URISyntaxException,
 			UnsupportedEncodingException,
 			InvalidKeyException,
@@ -382,7 +381,7 @@ public class IgnitedHttp {
 			}
 		}
 		
-		return new SimpleEntry<IgnitedHttpRequest, URI>( request, uri );
+		return request;
 	}
 	
 	public static List<NameValuePair> convertParameters( Map<String, Object> params ) throws UnsupportedEncodingException

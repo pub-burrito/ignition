@@ -1,6 +1,8 @@
 package com.github.ignition.support.http.cache;
 
 import java.net.ConnectException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.http.client.methods.HttpUriRequest;
 
@@ -47,4 +49,18 @@ public class CachedHttpRequest implements IgnitedHttpRequest {
     public IgnitedHttpRequest withTimeout(int timeout) {
         return this;
     }
+
+	@Override
+	public URI getRequestUri()
+	{
+		try
+		{
+			return new URI( url );
+		}
+		catch ( URISyntaxException e )
+		{
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

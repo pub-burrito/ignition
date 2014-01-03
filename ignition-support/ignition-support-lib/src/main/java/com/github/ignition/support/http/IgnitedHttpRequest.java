@@ -16,6 +16,7 @@
 package com.github.ignition.support.http;
 
 import java.net.ConnectException;
+import java.net.URI;
 
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -31,6 +32,9 @@ public interface IgnitedHttpRequest {
      * @return the request URL
      */
     public String getRequestUrl();
+    
+    
+    public URI getRequestUri();
 
     /**
      * Define the set of HTTP status codes which you anticipate to be returned by the server,
