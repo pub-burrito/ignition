@@ -15,11 +15,6 @@
 			<id>cloud.archiva.snapshots</id>
 			<url>http://archiva.cliff.cloudburrito.com:8080/archiva/repository/snapshots/</url>
 		</snapshotRepository>
-		
-		<site>
-			<id>cloud.archiva.internal</id>
-			<url>dav:http://archiva.cliff.cloudburrito.com:8080/archiva/repository/snapshots/com/cloud/sdk</url>
-		</site>
 	</distributionManagement>
 
   <dependencies>
