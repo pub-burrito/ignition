@@ -101,7 +101,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
     /**
      * Sanitize disk cache. Remove files which are older than expirationInMinutes.
      */
-    private void sanitizeDiskCache() {
+    public void sanitizeDiskCache() {
         List<File> cachedFiles = getCachedFiles();
         for (File f : cachedFiles) {
             // if file older than expirationInMinutes, remove it
