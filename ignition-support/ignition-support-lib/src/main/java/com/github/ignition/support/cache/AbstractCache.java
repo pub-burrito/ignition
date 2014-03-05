@@ -127,50 +127,38 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * @return
      */
     public boolean enableDiskCache( String rootDir ) {
-//        Context appContext = context.getApplicationContext();
-//        
-//        String rootDir = null;
-//        if (storageDevice == DISK_CACHE_SDCARD
-//                && Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-//            // SD-card available
-//            rootDir = Environment.getExternalStorageDirectory().getAbsolutePath()
-//                    + "/Android/data/" + appContext.getPackageName() + "/cache";
-//        } else {
-//            File internalCacheDir = appContext.getCacheDir();
-//            // apparently on some configurations this can come back as null
-//            if (internalCacheDir == null) {
-//                return (isDiskCacheEnabled = false);
-//            }
-//            rootDir = internalCacheDir.getAbsolutePath();
-//        }
-
-        setRootDir(rootDir);
-
-        File outFile = new File(diskCacheDirectory);
-        if (outFile.mkdirs()) {
-            File nomedia = new File(diskCacheDirectory, ".nomedia");
-            try {
-                nomedia.createNewFile();
-            } catch (IOException e) {
-            	System.err.printf("%s - %s\n", LOG_TAG, "Failed creating .nomedia file");
-            }
-        }
-
-        isDiskCacheEnabled = outFile.exists();
-
-        if (!isDiskCacheEnabled) {
-        	System.out.printf("%s - %s\n", LOG_TAG, "Failed creating disk cache directory " + diskCacheDirectory);
-        } else {
-        	System.out.printf("%s - %s\n", name, "enabled write through to " + diskCacheDirectory);
-
-            // sanitize disk cache
-            System.out.printf("%s - %s\n", name, "sanitize DISK cache");
-            sanitizeDiskCache();
-        }
-
-        return isDiskCacheEnabled;
+    	return enableDiskCache( rootDir, false );
     }
 
+    public boolean enableDiskCache( String rootDir, boolean sanitizeCache )
+    {
+    	 setRootDir(rootDir);
+
+         File outFile = new File(diskCacheDirectory);
+         if (outFile.mkdirs()) {
+             File nomedia = new File(diskCacheDirectory, ".nomedia");
+             try {
+                 nomedia.createNewFile();
+             } catch (IOException e) {
+             	System.err.printf("%s - %s\n", LOG_TAG, "Failed creating .nomedia file");
+             }
+         }
+
+         isDiskCacheEnabled = outFile.exists();
+
+         if (!isDiskCacheEnabled) {
+         	System.out.printf("%s - %s\n", LOG_TAG, "Failed creating disk cache directory " + diskCacheDirectory);
+         } else if ( sanitizeCache ){
+         	System.out.printf("%s - %s\n", name, "enabled write through to " + diskCacheDirectory);
+
+             // sanitize disk cache
+             System.out.printf("%s - %s\n", name, "sanitize DISK cache");
+             sanitizeDiskCache();
+         }
+
+         return isDiskCacheEnabled;
+    }
+    
     private void setRootDir(String rootDir) {
         this.diskCacheDirectory = rootDir + "/cachefu/"
                 + IgnitedStrings.underscore(name.replaceAll("\\s", ""));
