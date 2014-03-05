@@ -57,7 +57,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
     public static final int DISK_CACHE_INTERNAL = 0;
     public static final int DISK_CACHE_SDCARD = 1;
 
-    private static final String LOG_TAG = "Droid-Fu[CacheFu]";
+    private static final String LOG_TAG = AbstractCache.class.getSimpleName();
 
     private boolean isDiskCacheEnabled;
 
@@ -102,18 +102,35 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * Sanitize disk cache. Remove files which are older than expirationInMinutes.
      */
     public void sanitizeDiskCache() {
-        List<File> cachedFiles = getCachedFiles();
-        for (File f : cachedFiles) {
-            // if file older than expirationInMinutes, remove it
-            long lastModified = f.lastModified();
-            Date now = new Date();
-            long ageInMinutes = ((now.getTime() - lastModified) / (1000 * 60));
-
-            if (ageInMinutes >= expirationInMinutes) {
-                System.out.printf( "%s - %s\n", name, "DISK cache expiration for file " + f.toString());
-                f.delete();
-            }
-        }
+    	String threadName = "SanitizeDiskCache:" + this;
+    	
+		new Thread(
+			new Runnable() {
+				
+				@Override
+				public void run()
+				{
+					List<File> cachedFiles = getCachedFiles();
+			        
+			        System.out.printf( "%s | %s: %s\n", name, "- Cached Files", cachedFiles.size() );
+			        
+			        for (File f : cachedFiles) {
+			            // if file older than expirationInMinutes, remove it
+			            long lastModified = f.lastModified();
+			            Date now = new Date();
+			            long ageInMinutes = ((now.getTime() - lastModified) / (1000 * 60));
+			            
+			            System.out.printf( "%s | %s: %s = %s\n", name, "- Expiration for", f, ageInMinutes );
+	
+			            if (ageInMinutes >= expirationInMinutes) {
+			                System.out.printf( "%s | %s\n", name, "  ** EXPIRED **" );
+			                f.delete();
+			            }
+			        }
+				}
+			}, 
+			threadName
+		).start();
     }
 
     /**
@@ -140,20 +157,20 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
              try {
                  nomedia.createNewFile();
              } catch (IOException e) {
-             	System.err.printf("%s - %s\n", LOG_TAG, "Failed creating .nomedia file");
+             	System.err.printf("%s | %s\n", LOG_TAG, "Failed creating .nomedia file");
              }
          }
 
          isDiskCacheEnabled = outFile.exists();
 
          if (!isDiskCacheEnabled) {
-         	System.out.printf("%s - %s\n", LOG_TAG, "Failed creating disk cache directory " + diskCacheDirectory);
+         	System.out.printf("%s | %s\n", LOG_TAG, "Failed creating disk cache directory " + diskCacheDirectory);
          } else if ( sanitizeCache ){
-         	System.out.printf("%s - %s\n", name, "enabled write through to " + diskCacheDirectory);
+        	 System.out.printf("%s | %s: %s\n", name, "Cache directory", diskCacheDirectory);
 
-             // sanitize disk cache
-             System.out.printf("%s - %s\n", name, "sanitize DISK cache");
-             sanitizeDiskCache();
+	         // sanitize disk cache
+	         System.out.printf("%s | %s\n", name, "Sanitizing DISK cache...");
+	         sanitizeDiskCache();
          }
 
          return isDiskCacheEnabled;
@@ -242,7 +259,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
         ValT value = cache.get(key);
         if (value != null) {
             // memory hit
-        	System.out.printf("%s - %s\n", name, "MEM cache hit for " + key.toString());
+        	System.out.printf("%s | %s\n", name, "MEM cache hit for " + key.toString());
             return value;
         }
 
@@ -255,13 +272,13 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             long ageInMinutes = ((now.getTime() - lastModified) / (1000 * 60));
 
             if (ageInMinutes >= expirationInMinutes) {
-            	System.out.printf("%s - %s\n", name, "DISK cache expiration for file " + file.toString());
+            	System.out.printf("%s | %s\n", name, "DISK cache expiration for file " + file.toString());
                 file.delete();
                 return null;
             }
 
             // disk hit
-            System.out.printf("%s - %s\n", name, "DISK cache hit for " + key.toString());
+            System.out.printf("%s | %s\n", name, "DISK cache hit for " + key.toString());
             try {
                 value = readValueFromDisk(file);
             } catch (IOException e) {
@@ -404,13 +421,29 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * @return the list of files on disk
      */
     public List<File> getCachedFiles() {
-        File[] cachedFiles = new File(diskCacheDirectory).listFiles();
-        if (cachedFiles == null) {
-            return Collections.emptyList();
-        } else {
-            return Arrays.asList(cachedFiles);
-        }
+        return files( diskCacheDirectory );
     }
+
+	/**
+	 * Lists files recursively 
+	 */
+    @SuppressWarnings( "unchecked" )
+	protected List<File> files( String directoryPath )
+	{
+		File[] cachedFiles = new File(directoryPath).listFiles();
+        
+		List<File> files = (List<File>) ( cachedFiles == null ? Collections.emptyList() : Arrays.asList(cachedFiles) );
+		
+		for ( File file : files )
+		{
+			if ( file.isDirectory() )
+			{
+				files.addAll( files( file.getAbsolutePath() ) );
+			}
+		}
+		
+		return files;
+	}
 
     /**
      * 
@@ -454,7 +487,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             }
         }
 
-        System.out.printf("%s - %s\n", LOG_TAG, "Cache cleared");
+        System.out.printf("%s | %s\n", name, "Cache cleared");
     }
 
     @Override
