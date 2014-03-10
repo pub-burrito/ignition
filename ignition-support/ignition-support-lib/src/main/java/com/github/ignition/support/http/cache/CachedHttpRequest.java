@@ -4,6 +4,7 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpUriRequest;
 
 import com.github.ignition.support.http.IgnitedHttpRequest;
@@ -63,4 +64,10 @@ public class CachedHttpRequest implements IgnitedHttpRequest {
 			return null;
 		}
 	}
+	
+	@Override
+    public HttpEntity getEntity()
+    {//Currently only built for GETs no entity.    	
+    	return null;
+    }
 }

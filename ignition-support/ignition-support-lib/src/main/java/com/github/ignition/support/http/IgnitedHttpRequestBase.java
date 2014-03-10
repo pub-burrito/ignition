@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
@@ -75,6 +77,17 @@ public abstract class IgnitedHttpRequestBase implements IgnitedHttpRequest,
     public URI getRequestUri()
     {
     	return request.getURI();
+    }
+    
+    @Override
+    public HttpEntity getEntity()
+    {
+    	if ( request instanceof HttpEntityEnclosingRequest )
+    	{
+    		return ((HttpEntityEnclosingRequest) request).getEntity();
+    	}
+    	
+    	return null;
     }
 
     @Override
