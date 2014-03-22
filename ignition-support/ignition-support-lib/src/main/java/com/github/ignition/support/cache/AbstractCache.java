@@ -18,6 +18,7 @@ package com.github.ignition.support.cache;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -427,12 +428,12 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 	/**
 	 * Lists files recursively 
 	 */
-    @SuppressWarnings( "unchecked" )
+    @SuppressWarnings( { "unchecked", "rawtypes" } )
 	protected List<File> files( String directoryPath )
 	{
 		File[] cachedFiles = new File(directoryPath).listFiles();
         
-		List<File> files = (List<File>) ( cachedFiles == null ? Collections.emptyList() : Arrays.asList(cachedFiles) );
+		List<File> files = (List<File>) ( cachedFiles == null ? new ArrayList( Collections.emptyList() ) : Arrays.asList(cachedFiles) );
 		
 		for ( File file : files )
 		{
