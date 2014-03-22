@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -428,14 +427,11 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 	/**
 	 * Lists files recursively 
 	 */
-    @SuppressWarnings( { "unchecked", "rawtypes" } )
 	protected List<File> files( String directoryPath )
 	{
-		File[] cachedFiles = new File(directoryPath).listFiles();
-        
-		List<File> files = (List<File>) ( cachedFiles == null ? new ArrayList( Collections.emptyList() ) : Arrays.asList(cachedFiles) );
+		List<File> files = list( directoryPath );
 		
-		for ( File file : files )
+		for ( File file : new ArrayList<File>( files ) )
 		{
 			if ( file.isDirectory() )
 			{
@@ -444,6 +440,13 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 		}
 		
 		return files;
+	}
+
+	private List<File> list( String directoryPath )
+	{
+		File[] cachedFiles = new File(directoryPath).listFiles();
+        
+		return (List<File>) ( cachedFiles == null ? new ArrayList<File>() : new ArrayList<File>( Arrays.asList(cachedFiles) ) );
 	}
 
     /**
