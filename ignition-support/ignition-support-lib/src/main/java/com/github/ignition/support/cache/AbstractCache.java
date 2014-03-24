@@ -176,7 +176,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
          return isDiskCacheEnabled;
     }
     
-    private void setRootDir(String rootDir) {
+    protected void setRootDir(String rootDir) {
         this.diskCacheDirectory = rootDir + "/cachefu/"
                 + IgnitedStrings.underscore(name.replaceAll("\\s", ""));
     }
