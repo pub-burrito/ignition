@@ -110,9 +110,11 @@ public class IgnitedHttpRequestRetryHandler implements HttpRequestRetryHandler {
 				interrupted = true;
 			}
 			
-			timeSlept = currentTime + retrySleepTimeMillis - new Date().getTime();
-			
-		} while ( timeSlept < 0 );
+			long newTime = new Date().getTime();
+			timeSlept = currentTime + retrySleepTimeMillis - newTime;
+		
+		//keeping looping while timeSlept is greater than 0 which represents that the total time slept has not been completeled
+		} while ( timeSlept > 0 );
 		
 		if ( interrupted )
 		{
