@@ -444,7 +444,11 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 
 	private List<File> list( String directoryPath )
 	{
-		File[] cachedFiles = new File(directoryPath).listFiles();
+		System.out.printf( "%s | - Directory: %s\n", name, directoryPath );
+		
+		File[] cachedFiles = new File( directoryPath ).listFiles();
+		
+		System.out.printf( "%s | - Files: %d\n", name, cachedFiles.length );
         
 		return (List<File>) ( cachedFiles == null ? new ArrayList<File>() : new ArrayList<File>( Arrays.asList(cachedFiles) ) );
 	}
