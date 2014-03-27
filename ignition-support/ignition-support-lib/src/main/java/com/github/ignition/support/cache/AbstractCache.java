@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +55,7 @@ import com.google.common.collect.MapMaker;
  */
 public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 
-    public static final int DISK_CACHE_INTERNAL = 0;
+	public static final int DISK_CACHE_INTERNAL = 0;
     public static final int DISK_CACHE_SDCARD = 1;
 
     private static final String LOG_TAG = AbstractCache.class.getSimpleName();
@@ -83,9 +84,12 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * @param maxConcurrentThreads
      *            how many threads you think may at once access the cache; this need not be an exact
      *            number, but it helps in fragmenting the cache properly
+     * @param softValues
+     * 			  See {@link MapMaker#softValues()}.
      */
-    public AbstractCache(String name, int initialCapacity, long expirationInMinutes,
-            int maxConcurrentThreads) {
+    @SuppressWarnings( "deprecation" )
+	public AbstractCache(String name, int initialCapacity, long expirationInMinutes,
+            int maxConcurrentThreads, boolean softValues) {
 
         this.name = name;
         this.expirationInMinutes = expirationInMinutes;
@@ -94,7 +98,12 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
         mapMaker.initialCapacity(initialCapacity);
         mapMaker.expiration(expirationInMinutes * 60, TimeUnit.SECONDS);
         mapMaker.concurrencyLevel(maxConcurrentThreads);
-        mapMaker.softValues();
+        
+        if ( softValues )
+        {
+        	mapMaker.softValues();
+        }
+        
         this.cache = mapMaker.makeMap();
     }
 
@@ -448,7 +457,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 		
 		File[] cachedFiles = new File( directoryPath ).listFiles();
 		
-		System.out.printf( "%s | - Files: %d\n", name, cachedFiles.length );
+		System.out.printf( "%s | - Files: %d\n", name, cachedFiles != null ? cachedFiles.length : 0 );
         
 		return (List<File>) ( cachedFiles == null ? new ArrayList<File>() : new ArrayList<File>( Arrays.asList(cachedFiles) ) );
 	}
@@ -486,18 +495,40 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
         cache.clear();
 
         if (removeFromDisk && isDiskCacheEnabled) {
-            File[] cachedFiles = new File(diskCacheDirectory).listFiles();
-            if (cachedFiles == null) {
-                return;
-            }
-            for (File f : cachedFiles) {
-                f.delete();
-            }
+            try
+			{
+            	
+				deleteRecursive( new File( diskCacheDirectory ) );
+			}
+			catch ( FileNotFoundException e )
+			{
+				e.printStackTrace();
+			}
         }
 
         System.out.printf("%s | %s\n", name, "Cache cleared");
     }
 
+    public static void deleteRecursive(File path) throws FileNotFoundException {
+    	File[] currList;
+    	Stack<File> stack = new Stack<File>();
+    	stack.push( path );
+    	while (! stack.isEmpty()) {
+    	    if (stack.lastElement().isDirectory()) {
+    	        currList = stack.lastElement().listFiles();
+    	        if (currList.length > 0) {
+    	            for (File curr: currList) {
+    	                stack.push(curr);
+    	            }
+    	        } else {
+    	            stack.pop().delete();
+    	        }
+    	    } else {
+    	        stack.pop().delete();
+    	    }
+    	}
+    }
+    
     @Override
     public Collection<ValT> values() {
         return cache.values();
