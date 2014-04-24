@@ -26,10 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import com.github.ignition.support.IgnitedStrings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.MapMaker;
 
 /**
@@ -64,7 +67,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 
     protected String diskCacheDirectory;
 
-    private ConcurrentMap<KeyT, ValT> cache;
+    private Cache<KeyT, ValT> cache;
 
     private String name;
 
@@ -87,16 +90,18 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * @param softValues
      * 			  See {@link MapMaker#softValues()}.
      */
-    @SuppressWarnings( "deprecation" )
+    @SuppressWarnings( "unchecked" )
 	public AbstractCache(String name, int initialCapacity, long expirationInMinutes,
             int maxConcurrentThreads, boolean softValues) {
 
         this.name = name;
         this.expirationInMinutes = expirationInMinutes;
 
-        MapMaker mapMaker = new MapMaker();
+        CacheBuilder<KeyT, ValT> mapMaker = (CacheBuilder<KeyT, ValT>) CacheBuilder.newBuilder();
+        
+        //MapMaker mapMaker = new MapMaker();
         mapMaker.initialCapacity(initialCapacity);
-        mapMaker.expiration(expirationInMinutes * 60, TimeUnit.SECONDS);
+        mapMaker.expireAfterWrite(expirationInMinutes * 60, TimeUnit.SECONDS);
         mapMaker.concurrencyLevel(maxConcurrentThreads);
         
         if ( softValues )
@@ -104,7 +109,17 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
         	mapMaker.softValues();
         }
         
-        this.cache = mapMaker.makeMap();
+        mapMaker.removalListener( new RemovalListener<KeyT, ValT>() {
+
+			@Override
+			public void onRemoval( RemovalNotification<KeyT, ValT> notification )
+			{
+				System.out.printf( "- Removing entry from cache: %s (%s)\n", notification.getKey(), notification.getCause() );
+			}
+        	
+        } );
+        
+        this.cache = mapMaker.build();
     }
 
     /**
@@ -265,7 +280,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
     @SuppressWarnings("unchecked")
     public synchronized ValT get(Object elementKey) {
         KeyT key = (KeyT) elementKey;
-        ValT value = cache.get(key);
+        ValT value = cache.getIfPresent(key);
         if (value != null) {
             // memory hit
         	System.out.printf("%s | %s\n", name, "MEM cache hit for " + key.toString());
@@ -316,7 +331,9 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
             cacheToDisk(key, value);
         }
 
-        return cache.put(key, value);
+        cache.put(key, value);
+        
+        return value;
     }
 
     @Override
@@ -334,7 +351,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      */
     @Override
     public synchronized boolean containsKey(Object key) {
-        return cache.containsKey(key) || containsKeyOnDisk(key);
+        return cache.getIfPresent( key ) != null || containsKeyOnDisk(key);
     }
 
     /**
@@ -345,7 +362,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * @return true if the value is currently hold in memory, false otherwise
      */
     public synchronized boolean containsKeyInMemory(Object key) {
-        return cache.containsKey(key);
+        return cache.getIfPresent( key ) != null;
     }
 
     /**
@@ -367,7 +384,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      */
     @Override
     public synchronized boolean containsValue(Object value) {
-        return cache.containsValue(value);
+        return cache.asMap().containsValue(value);
     }
 
     /**
@@ -396,27 +413,31 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      * @return the element removed or null
      */
     public ValT removeKey(Object key) {
-        return cache.remove(key);
+    	ValT currentValue = cache.getIfPresent( key );
+    	
+        cache.invalidate(key);
+        
+        return currentValue;
     }
 
     @Override
     public Set<KeyT> keySet() {
-        return cache.keySet();
+        return cache.asMap().keySet();
     }
 
     @Override
     public Set<Map.Entry<KeyT, ValT>> entrySet() {
-        return cache.entrySet();
+        return cache.asMap().entrySet();
     }
 
     @Override
     public synchronized int size() {
-        return cache.size();
+        return (int) cache.size();
     }
 
     @Override
     public synchronized boolean isEmpty() {
-        return cache.isEmpty();
+        return cache.size() == 0;
     }
 
     public boolean isDiskCacheEnabled() {
@@ -492,7 +513,7 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      *            whether or not to wipe the disk cache, too
      */
     public synchronized void clear(boolean removeFromDisk) {
-        cache.clear();
+        cache.invalidateAll();
 
         if (removeFromDisk && isDiskCacheEnabled) {
             try
@@ -531,6 +552,6 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
     
     @Override
     public Collection<ValT> values() {
-        return cache.values();
+        return cache.asMap().values();
     }
 }
