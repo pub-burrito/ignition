@@ -31,8 +31,8 @@ import java.io.IOException;
  */
 public class ImageCache extends AbstractCache<String, byte[]> {
 
-    public ImageCache(int initialCapacity, long expirationInMinutes, int maxConcurrentThreads) {
-        super("ImageCache", initialCapacity, expirationInMinutes, maxConcurrentThreads, true);
+    public ImageCache(int initialCapacity, long expirationInMinutes, int maxConcurrentThreads, CacheRemovalListener<String, byte[]> cacheRemovalListener) {
+        super("ImageCache", initialCapacity, expirationInMinutes, maxConcurrentThreads, true, cacheRemovalListener);
     }
 
     public synchronized void removeAllWithPrefix(String urlPrefix) {

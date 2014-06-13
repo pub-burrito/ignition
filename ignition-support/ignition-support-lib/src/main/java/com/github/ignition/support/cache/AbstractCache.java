@@ -89,10 +89,11 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
      *            number, but it helps in fragmenting the cache properly
      * @param softValues
      * 			  See {@link MapMaker#softValues()}.
+     * @param cacheRemovalListener TODO
      */
     @SuppressWarnings( "unchecked" )
 	public AbstractCache(String name, int initialCapacity, long expirationInMinutes,
-            int maxConcurrentThreads, boolean softValues) {
+            int maxConcurrentThreads, boolean softValues, final CacheRemovalListener<KeyT, ValT> cacheRemovalListener ) {
 
         this.name = name;
         this.expirationInMinutes = expirationInMinutes;
@@ -115,6 +116,11 @@ public abstract class AbstractCache<KeyT, ValT> implements Map<KeyT, ValT> {
 			public void onRemoval( RemovalNotification<KeyT, ValT> notification )
 			{
 				System.out.printf( "- Removing entry from cache: %s (%s)\n", notification.getKey(), notification.getCause() );
+				
+				if ( cacheRemovalListener != null )
+				{
+					cacheRemovalListener.onRemoval( notification.getKey(), notification.getValue() );
+				}
 			}
         	
         } );
