@@ -37,7 +37,7 @@ public class IgnitedHttpResponseImpl implements IgnitedHttpResponse {
          * via its consumeContent(). 
          */
         if (entity != null) {
-        	response.setEntity( new IgnittedManagedHttpEntity(entity) );
+        	response.setEntity( new IgnitedManagedHttpEntity(entity) );
         }
     }
 

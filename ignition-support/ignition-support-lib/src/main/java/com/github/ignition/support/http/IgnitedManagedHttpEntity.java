@@ -3,29 +3,40 @@
  */
 package com.github.ignition.support.http;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.HttpEntityWrapper;
 
 /**
  * <!--
- * IgnittedManagedHttpEntity.java
+ * IgnitedManagedHttpEntity.java
  * -->
- * TODO Description
+ * Used to pass down an Entity that can't be consumed, so the HTTPClient framework doesn't automatically consume the entity, given we'll need to read from it.
  * 
  * @author <a href="mailto:steven.berlanga@cloud.com">Steven Berlanga</a>
  * @since TODO
  * @date Dec 27, 2013
  * @copyright Copyright (c) 2013 Cloud.com. All rights reserved.
  */
-public class IgnittedManagedHttpEntity extends HttpEntityWrapper
+public class IgnitedManagedHttpEntity extends HttpEntityWrapper
 {
 
-	public IgnittedManagedHttpEntity( HttpEntity wrapped )
+	public IgnitedManagedHttpEntity( HttpEntity wrapped )
 	{
 		super( wrapped );
 	}	
+	
+	@Override
+	public InputStream getContent() throws IOException
+	{
+		/*
+		 * This stream is a fake so HTTPClient can consume it. The real one is still in the wrapped entity.
+		 */
+		return new ByteArrayInputStream( new byte[0] );
+	}
 
 	@Override
 	public void consumeContent() throws IOException
